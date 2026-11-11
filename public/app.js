@@ -58,7 +58,7 @@ async function startDebate() {
   $("setup-error").textContent = "";
   const topic = $("topic").value.trim();
   if (!topic) { $("setup-error").textContent = "Escribe un tema antes de iniciar."; return; }
-  if (selected.size < 2) { $("setup-error").textContent = "Selecciona al menos dos modelos configurados."; return; }
+  if (selected.size < 1) { $("setup-error").textContent = "Selecciona al menos un modelo configurado."; return; }
   $("transcript").innerHTML = "";
   setRunning(true);
   currentController = new AbortController();
