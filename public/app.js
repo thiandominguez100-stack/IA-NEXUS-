@@ -3,6 +3,8 @@ const selected = new Set();
 let activeRunId = null;
 let currentController = null;
 let maxRounds = 3;
+const chatHistory = [];
+let chatBusy = false;
 
 async function loadProviders() {
   try {
@@ -21,11 +23,76 @@ async function loadProviders() {
     $("providers").querySelectorAll('input[type="checkbox"]').forEach(input => {
       input.addEventListener("change", () => input.checked ? selected.add(input.value) : selected.delete(input.value));
     });
-    const ready = data.providers.filter(p => p.configured).length;
-    if (ready < 2) $("setup-error").textContent = "Configura al menos dos modelos locales en Ollama o añade un proveedor cloud con acceso gratuito.";
+    const readyProviders = data.providers.filter(p => p.configured);
+    $("chat-provider").innerHTML = readyProviders.map(p => `<option value="${p.id}">${p.name}</option>`).join("");
+    $("chat-provider").disabled = readyProviders.length === 0;
+    if (readyProviders.length === 0) $("chat-error").textContent = "No hay modelos configurados. Comprueba el archivo .env y reinicia NEXUS.";
   } catch {
     $("providers").textContent = "No se pudo conectar con el servidor.";
     $("system-status").textContent = "Servidor desconectado";
+  }
+}
+
+function addChatMessage(name, text, role) {
+  const empty = $("transcript").querySelector(".empty");
+  if (empty) empty.remove();
+  const article = document.createElement("article");
+  article.className = "message" + (role === "user" ? " user-message" : "");
+  const head = document.createElement("div");
+  head.className = "message-head";
+  const title = document.createElement("strong");
+  title.textContent = name;
+  const badge = document.createElement("span");
+  badge.textContent = role === "user" ? "TU MENSAJE" : "RESPUESTA";
+  const body = document.createElement("p");
+  body.textContent = text;
+  head.append(title, badge);
+  article.append(head, body);
+  $("transcript").append(article);
+  article.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+async function sendChatMessage() {
+  if (chatBusy) return;
+  const content = $("chat-input").value.trim();
+  const provider = $("chat-provider").value;
+  if (!provider) {
+    $("chat-error").textContent = "No hay ningún modelo configurado para conversar.";
+    return;
+  }
+  if (!content) return;
+
+  $("chat-error").textContent = "";
+  $("chat-input").value = "";
+  chatHistory.push({ role: "user", content });
+  addChatMessage("Vos", content, "user");
+  chatBusy = true;
+  $("chat-send").disabled = true;
+  $("chat-status").textContent = "La IA está respondiendo…";
+  $("room-status").textContent = "RESPONDIENDO";
+  $("room-status").classList.add("active");
+
+  try {
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ provider, messages: chatHistory.slice(-16) })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "No se pudo enviar el mensaje.");
+    chatHistory.push({ role: "assistant", content: data.answer });
+    addChatMessage(data.name || "IA", data.answer, "assistant");
+    $("chat-status").textContent = "Podés seguir escribiendo.";
+  } catch (error) {
+    $("chat-error").textContent = error.message;
+    $("chat-status").textContent = "No se pudo completar el envío.";
+    chatHistory.pop();
+  } finally {
+    chatBusy = false;
+    $("chat-send").disabled = false;
+    $("room-status").textContent = "EN ESPERA";
+    $("room-status").classList.remove("active");
+    $("chat-input").focus();
   }
 }
 
@@ -115,4 +182,15 @@ async function stopDebate() {
 
 $("start").addEventListener("click", startDebate);
 $("stop").addEventListener("click", stopDebate);
+$("chat-send").addEventListener("click", sendChatMessage);
+$("chat-input").addEventListener("keydown", event => {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
+    sendChatMessage();
+  }
+});
+$("chat-provider").addEventListener("change", () => {
+  chatHistory.length = 0;
+  $("chat-status").textContent = "Cambiar de modelo inicia un historial nuevo.";
+});
 loadProviders();
