@@ -17,7 +17,10 @@ const providers = {
   anthropic: { label: "Claude", key: "ANTHROPIC_API_KEY", model: "ANTHROPIC_MODEL" },
   gemini: { label: "Gemini", key: "GEMINI_API_KEY", model: "GEMINI_MODEL" },
   xai: { label: "Grok", key: "XAI_API_KEY", model: "XAI_MODEL" },
-  deepseek: { label: "DeepSeek", key: "DEEPSEEK_API_KEY", model: "DEEPSEEK_MODEL" }
+  deepseek: { label: "DeepSeek", key: "DEEPSEEK_API_KEY", model: "DEEPSEEK_MODEL" },
+  local_a: { label: "Modelo local A · Ollama", model: "OLLAMA_MODEL_A", local: true },
+  local_b: { label: "Modelo local B · Ollama", model: "OLLAMA_MODEL_B", local: true },
+  local_c: { label: "Modelo local C · Ollama", model: "OLLAMA_MODEL_C", local: true }
 };
 
 const activeRuns = new Map();
@@ -25,13 +28,16 @@ const lastRequestByIp = new Map();
 
 function configured(id) {
   const p = providers[id];
-  return Boolean(p && process.env[p.key] && process.env[p.model]);
+  if (!p) return false;
+  if (p.local) return Boolean(process.env[p.model]);
+  return Boolean(process.env[p.key] && process.env[p.model]);
 }
 
 function publicProviders() {
   return Object.entries(providers).map(([id, p]) => ({
     id, name: p.label, configured: configured(id),
-    model: process.env[p.model] || null
+    model: process.env[p.model] || null,
+    kind: p.local ? "local" : "cloud"
   }));
 }
 
@@ -111,7 +117,7 @@ app.post("/api/debate", authRequired, async (req, res) => {
 
 async function askProvider(id, context, signal) {
   const p = providers[id];
-  const apiKey = process.env[p.key];
+  const apiKey = p.local ? null : process.env[p.key];
   const model = process.env[p.model];
   const history = context.transcript.map(m => `${m.name} (ronda ${m.round}): ${m.text}`).join("\n\n");
   const prompt = [
@@ -128,6 +134,24 @@ async function askProvider(id, context, signal) {
   const timeout = AbortSignal.timeout(90000);
   const combined = AbortSignal.any([signal, timeout]);
   let response;
+
+  if (p.local) {
+    const base = (process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434").replace(/\\/$/, "");
+    response = await fetch(base + "/api/chat", {
+      method: "POST", signal: combined,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model,
+        messages: [{ role: "user", content: prompt }],
+        stream: false,
+        keep_alive: "0",
+        options: { num_predict: MAX_OUTPUT_TOKENS, num_ctx: 2048 }
+      })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Ollama no respondió correctamente. Comprueba que esté abierto y que el modelo esté descargado.");
+    return data.message?.content?.trim() || "El modelo local no devolvió texto.";
+  }
 
   if (id === "openai") {
     response = await fetch("https://api.openai.com/v1/responses", {
