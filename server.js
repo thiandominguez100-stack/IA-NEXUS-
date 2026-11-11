@@ -71,8 +71,8 @@ app.post("/api/debate", authRequired, async (req, res) => {
   const rounds = Math.min(MAX_ROUNDS, Math.max(1, Number(req.body?.rounds || 1)));
 
   if (!topic) return res.status(400).json({ error: "Escribe un tema para iniciar." });
-  if (ids.length < 2 || ids.length > 5 || ids.some(id => !providers[id])) {
-    return res.status(400).json({ error: "Selecciona entre 2 y 5 proveedores válidos." });
+  if (ids.length < 1 || ids.length > 5 || ids.some(id => !providers[id])) {
+    return res.status(400).json({ error: "Selecciona entre 1 y 5 proveedores válidos. Para un debate entre IA, selecciona al menos 2." });
   }
   const missing = ids.filter(id => !configured(id));
   if (missing.length) {
