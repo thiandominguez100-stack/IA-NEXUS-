@@ -38,6 +38,18 @@
     <section class="panel room">
       <div class="section-heading"><div><p class="eyebrow">03 / SALA EN VIVO</p><h2>Transcripción</h2></div><span class="live-pill" id="room-status">EN ESPERA</span></div>
       <div id="transcript" class="transcript"><div class="empty"><div class="empty-icon">◎</div><strong>La sala está preparada</strong><p>Cuando inicies el debate, las intervenciones aparecerán aquí en orden.</p></div></div>
+      <div class="chat-composer">
+        <div class="chat-composer-heading">
+          <div><p class="eyebrow">CHAT DIRECTO</p><label for="chat-provider">Hablar con un modelo</label></div>
+          <select id="chat-provider" aria-label="Modelo para el chat"></select>
+        </div>
+        <textarea id="chat-input" rows="2" maxlength="4000" placeholder="Escribe tu mensaje para la IA..." aria-label="Tu mensaje"></textarea>
+        <div class="chat-composer-footer">
+          <span id="chat-status" class="chat-status">El historial se conserva durante esta sesión.</span>
+          <button id="chat-send" class="primary chat-send">Enviar ↗</button>
+        </div>
+        <p id="chat-error" class="error" role="alert"></p>
+      </div>
     </section>
     <footer>NEXUS AI <span>·</span> Controlado por el usuario</footer>
   </main>
