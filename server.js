@@ -76,7 +76,7 @@ app.post("/api/debate", authRequired, async (req, res) => {
   const runId = randomUUID();
   const controller = new AbortController();
   activeRuns.set(runId, controller);
-  req.on("close", () => {
+  res.on("close", () => {
     if (!res.writableEnded) controller.abort();
   });
 
