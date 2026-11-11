@@ -1,58 +1,58 @@
 # NEXUS AI
 
-Sala multiagente para conversar con modelos de IA reales mediante las APIs oficiales de cada proveedor.
+Sala multiagente para coordinar conversaciones entre modelos reales. El objetivo del proyecto es mantener un modo de uso con **presupuesto de $0**: prioriza modelos abiertos ejecutados localmente y solo habilita proveedores cloud cuando exista un nivel gratuito adecuado.
 
-## Estado actual
+## Funciones de esta versión
 
-Primera versión funcional de la interfaz y del orquestador:
-- Selección de 2 a 5 proveedores.
-- Turnos secuenciales y rondas configurables.
-- Transcripción compartida: cada participante recibe el historial anterior.
-- Controles para iniciar y detener una conversación.
-- Claves API solo en el servidor.
-- Errores de proveedor y límites básicos de solicitudes.
+- Interfaz web para configurar tema, instrucción, participantes y rondas.
+- Turnos secuenciales con historial compartido.
+- Transcripción en directo y control para detener.
+- Adaptadores para OpenAI, Anthropic, Gemini, xAI y DeepSeek.
+- Hasta tres participantes locales mediante Ollama, sin claves API.
+- Claves de proveedores cloud guardadas solo en el servidor.
 
-## Proveedores
+## Modo gratuito local
 
-- OpenAI / ChatGPT — Responses API
-- Anthropic / Claude — Messages API
-- Google / Gemini — generateContent
-- xAI / Grok — API compatible con Chat Completions
-- DeepSeek — API compatible con Chat Completions
+### Requisitos
 
-La conexión real requiere una clave API válida y un identificador de modelo habilitado por cada proveedor. Los nombres de modelo se configuran en el entorno porque la disponibilidad cambia según la cuenta y el proveedor.
+- Node.js 20 o superior.
+- Ollama instalado en la misma computadora que ejecuta NEXUS.
+- Modelos pequeños compatibles con la memoria disponible.
 
-## Requisitos
+Descarga Ollama desde https://ollama.com/ y abre la aplicación. En una terminal, descarga modelos pequeños de ejemplo:
 
-- Node.js 20 o superior
-- Claves API de al menos dos proveedores para iniciar un debate
+```bash
+ollama pull qwen2.5:1.5b
+ollama pull llama3.2:1b
+```
 
-## Instalación local
+Luego copia `.env.example` como `.env` y configura:
 
-1. Clona el repositorio.
-2. Instala dependencias:
+```env
+OLLAMA_BASE_URL=http://127.0.0.1:11434
+OLLAMA_MODEL_A=qwen2.5:1.5b
+OLLAMA_MODEL_B=llama3.2:1b
+```
 
-   `npm install`
+Los nombres deben coincidir exactamente con los modelos descargados. Ollama debe permanecer ejecutándose mientras uses NEXUS. La aplicación solicita a Ollama que descargue el modelo de memoria después de cada respuesta para reducir la presión de RAM; eso puede hacer más lentos los turnos siguientes.
 
-3. Copia `.env.example` como `.env`.
-4. Completa las claves y los identificadores de modelo que tengas habilitados.
-5. Inicia el servidor:
+En equipos con 8 GB de RAM, empieza con modelos de 1B a 1.5B parámetros y evita ejecutar muchas aplicaciones pesadas a la vez. El rendimiento depende del procesador, memoria disponible y cuantización del modelo.
 
-   `npm start`
+## Instalación de NEXUS
 
-6. Abre `http://localhost:3000`.
+1. Clona este repositorio.
+2. En la carpeta del proyecto ejecuta `npm install`.
+3. Copia `.env.example` como `.env` y configura los modelos locales.
+4. Ejecuta `npm start`.
+5. Abre `http://localhost:3000`.
+
+## Proveedores cloud opcionales
+
+Los adaptadores de OpenAI, Anthropic, Gemini, xAI y DeepSeek requieren claves API y modelos habilitados. Una aplicación de chat gratuita no garantiza API gratuita. No configures facturación ni introduzcas métodos de pago para cumplir el objetivo de presupuesto cero. Si un proveedor no ofrece acceso gratuito en tu cuenta, déjalo desactivado.
 
 ## Seguridad
 
-- No subas el archivo `.env` a GitHub.
-- No introduzcas claves API en el navegador.
-- Si se publica el servidor en internet, configura `ADMIN_TOKEN`, HTTPS, autenticación de usuario, límites de uso y controles de presupuesto.
-- Las APIs pueden tener costos, cuotas y restricciones independientes de las aplicaciones de chat gratuitas.
-
-## Variables principales
-
-Consulta `.env.example` para ver todas las variables. `MAX_ROUNDS` limita las rondas del debate y `MAX_OUTPUT_TOKENS` limita la longitud solicitada a cada modelo.
-
-## Alcance
-
-NEXUS AI coordina conversaciones entre modelos. No entrena ni replica esos modelos: envía solicitudes a los servicios oficiales y muestra sus respuestas.
+- Nunca subas `.env` a GitHub.
+- Nunca pegues claves API en la interfaz ni en el chat.
+- Mantén el servidor local; no lo expongas a internet sin autenticación, HTTPS y controles adicionales.
+- NEXUS coordina respuestas; no entrena ni replica los modelos.
