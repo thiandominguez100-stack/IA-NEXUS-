@@ -22,7 +22,7 @@ async function loadProviders() {
       input.addEventListener("change", () => input.checked ? selected.add(input.value) : selected.delete(input.value));
     });
     const ready = data.providers.filter(p => p.configured).length;
-    if (ready < 2) $("setup-error").textContent = "Configura al menos dos proveedores en el servidor para iniciar un debate.";
+    if (ready < 2) $("setup-error").textContent = "Configura al menos dos modelos locales en Ollama o añade un proveedor cloud con acceso gratuito.";
   } catch {
     $("providers").textContent = "No se pudo conectar con el servidor.";
     $("system-status").textContent = "Servidor desconectado";
