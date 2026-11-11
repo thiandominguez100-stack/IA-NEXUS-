@@ -115,6 +115,48 @@ app.post("/api/debate", authRequired, async (req, res) => {
   }
 });
 
+app.post("/api/chat", authRequired, async (req, res) => {
+  const id = req.body?.provider;
+  if (!providers[id]) return res.status(400).json({ error: "Selecciona un modelo válido." });
+  if (!configured(id)) return res.status(400).json({ error: "Ese modelo no está configurado en el servidor." });
+
+  const rawMessages = Array.isArray(req.body?.messages) ? req.body.messages.slice(-16) : [];
+  if (!rawMessages.length || rawMessages.at(-1)?.role !== "user") {
+    return res.status(400).json({ error: "Envía un mensaje para comenzar." });
+  }
+
+  const messages = rawMessages.map(message => ({
+    role: message?.role === "assistant" ? "assistant" : message?.role === "user" ? "user" : "",
+    content: cleanText(message?.content, 4000)
+  }));
+  if (messages.some(message => !message.role || !message.content)) {
+    return res.status(400).json({ error: "El historial contiene un mensaje inválido o vacío." });
+  }
+
+  const latest = messages.at(-1);
+  const transcript = messages.slice(0, -1).map((message, index) => ({
+    name: message.role === "assistant" ? providers[id].label : "Usuario",
+    round: Math.floor(index / 2) + 1,
+    text: message.content
+  }));
+  const controller = new AbortController();
+  res.on("close", () => {
+    if (!res.writableEnded) controller.abort();
+  });
+
+  try {
+    const answer = await askProvider(id, {
+      topic: latest.content,
+      instruction: "Esta es una conversación directa con el usuario, no un debate por rondas. Responde naturalmente al último mensaje y ten en cuenta todo el historial. Puedes hacer preguntas y desarrollar tus propias ideas.",
+      transcript,
+      round: Math.ceil(messages.length / 2)
+    }, controller.signal);
+    res.json({ answer, name: providers[id].label });
+  } catch (error) {
+    res.status(502).json({ error: safeError(error) });
+  }
+});
+
 async function askProvider(id, context, signal) {
   const p = providers[id];
   const apiKey = p.local ? null : process.env[p.key];
