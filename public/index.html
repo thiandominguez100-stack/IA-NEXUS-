@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10131b">
+  <title>NEXUS AI — Sala multiagente</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand-mark">N</div>
+      <div><div class="brand">NEXUS <span>AI</span></div><div class="subtitle">Sala de inteligencia multiagente</div></div>
+      <div class="status" id="system-status"><i></i> Comprobando</div>
+    </header>
+
+    <section class="intro">
+      <p class="eyebrow">MULTI-AGENT CONVERSATION SYSTEM</p>
+      <h1>Una mesa.<br><span>Cinco inteligencias.</span></h1>
+      <p class="intro-copy">Conecta modelos reales mediante sus APIs oficiales y modera cada intervención desde un solo lugar.</p>
+    </section>
+
+    <section class="panel setup">
+      <div class="section-heading"><div><p class="eyebrow">01 / CONFIGURACIÓN</p><h2>Crear conversación</h2></div><span class="step">NEXUS CORE</span></div>
+      <label for="topic">Tema de debate</label>
+      <textarea id="topic" maxlength="1200" placeholder="¿Sobre qué deberían conversar las IA?"></textarea>
+      <label for="instruction">Instrucción del moderador <span class="optional">opcional</span></label>
+      <input id="instruction" maxlength="1200" placeholder="Ej. Comparen argumentos y señalen desacuerdos.">
+      <div class="section-heading participants-heading"><div><p class="eyebrow">02 / PARTICIPANTES</p><h2>Seleccionar modelos</h2></div><span class="hint">Mínimo 2</span></div>
+      <div class="providers" id="providers"><div class="loading">Cargando proveedores…</div></div>
+      <div class="round-row"><label for="rounds">Rondas</label><select id="rounds"><option value="1">1 ronda</option><option value="2">2 rondas</option><option value="3" selected>3 rondas</option><option value="4">4 rondas</option><option value="5">5 rondas</option></select></div>
+      <div class="actions"><button id="start" class="primary">Iniciar conversación <span>↗</span></button><button id="stop" class="secondary" disabled>Detener</button></div>
+      <p class="notice">Las claves API se configuran únicamente en el servidor. Los proveedores pueden aplicar límites y costos propios.</p>
+      <p id="setup-error" class="error" role="alert"></p>
+    </section>
+
+    <section class="panel room">
+      <div class="section-heading"><div><p class="eyebrow">03 / SALA EN VIVO</p><h2>Transcripción</h2></div><span class="live-pill" id="room-status">EN ESPERA</span></div>
+      <div id="transcript" class="transcript"><div class="empty"><div class="empty-icon">◎</div><strong>La sala está preparada</strong><p>Cuando inicies el debate, las intervenciones aparecerán aquí en orden.</p></div></div>
+    </section>
+    <footer>NEXUS AI <span>·</span> Controlado por el usuario</footer>
+  </main>
+  <script src="/app.js" defer></script>
+</body>
+</html>
