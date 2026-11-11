@@ -136,7 +136,7 @@ async function askProvider(id, context, signal) {
   let response;
 
   if (p.local) {
-    const base = (process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434").replace(/\\/$/, "");
+    const base = (process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434").replace(/\/$/, "");
     response = await fetch(base + "/api/chat", {
       method: "POST", signal: combined,
       headers: { "Content-Type": "application/json" },
